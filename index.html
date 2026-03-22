@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EOS Naviance</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0e1a; --surf:#111827; --surf2:#1a2235;
+  --b:rgba(255,255,255,0.08); --b2:rgba(255,255,255,0.14);
+  --tx:#f0f4ff; --tx2:#8892a4; --tx3:#4a5568;
+  --ac:#4f8cff; --ac2:#7c3aed;
+  --gr:#10b981; --am:#f59e0b; --rd:#ef4444; --go:#fbbf24;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(79,140,255,.07),transparent 60%),radial-gradient(ellipse 60% 40% at 80% 80%,rgba(124,58,237,.06),transparent 60%);pointer-events:none;z-index:0}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* HEADER */
+header{padding:48px 0 32px;border-bottom:1px solid var(--b);margin-bottom:40px}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.logo-mark{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:18px;color:#fff}
+.logo-label{font-size:13px;font-weight:500;color:var(--tx2);letter-spacing:.1em;text-transform:uppercase}
+h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,5vw,42px);line-height:1.15;margin-bottom:10px}
+h1 em{font-style:italic;color:var(--ac)}
+.subtitle{font-size:15px;color:var(--tx2);line-height:1.6;max-width:560px}
+
+/* STEPS */
+.steps{display:flex;background:var(--surf);border-radius:12px;border:1px solid var(--b);overflow:hidden;margin-bottom:36px}
+.step-tab{flex:1;padding:12px 8px;text-align:center;font-size:12px;color:var(--tx3);font-weight:500;border-right:1px solid var(--b);transition:all .2s}
+.step-tab:last-child{border-right:none}
+.step-tab.active{color:var(--ac);background:rgba(79,140,255,.06)}
+.step-tab.done{color:var(--gr)}
+.step-tab .sn{display:block;font-size:18px;font-weight:600;font-family:'DM Serif Display',serif;margin-bottom:2px}
+.step-tab.done .sn::after{content:' ✓';font-size:14px}
+
+/* CARD */
+.card{background:var(--surf);border-radius:16px;border:1px solid var(--b);padding:28px;margin-bottom:20px;display:none}
+.card.show{display:block}
+.card-title{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px}
+.card-sub{font-size:13px;color:var(--tx2);margin-bottom:24px;line-height:1.5}
+
+/* MAJOR GRID */
+.major-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:24px}
+.mj{border:1.5px solid var(--b);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .18s;background:var(--surf2)}
+.mj:hover{border-color:var(--ac);background:rgba(79,140,255,.06)}
+.mj.sel{border-color:var(--ac);background:rgba(79,140,255,.1)}
+.mj-icon{font-size:22px;margin-bottom:6px}
+.mj-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.mj-sub{font-size:11px;color:var(--tx2);line-height:1.4}
+
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--b2);border-radius:14px;padding:36px 24px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surf2);margin-bottom:16px}
+.upload-zone:hover,.upload-zone.over{border-color:var(--ac);background:rgba(79,140,255,.06)}
+.upload-zone.done{border-style:solid;border-color:var(--gr);background:rgba(16,185,129,.04)}
+.up-icon{margin-bottom:14px}
+.up-label{font-size:15px;font-weight:500;margin-bottom:6px}
+.up-hint{font-size:12px;color:var(--tx3)}
+.prev-row{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap}
+.prev-file-icon{font-size:32px;line-height:1}
+.prev-info{text-align:left}
+.prev-name{font-size:14px;font-weight:600;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prev-size{font-size:12px;color:var(--tx2);margin-top:2px}
+.prev-status{margin-top:10px;font-size:12px;color:var(--gr)}
+.prev-rm{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);color:#f87171;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prev-rm:hover{background:rgba(239,68,68,.25)}
+.or-line{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--tx3);font-size:12px}
+.or-line::before,.or-line::after{content:'';flex:1;height:1px;background:var(--b)}
+.btn-toggle{background:transparent;border:1px solid var(--b2);color:var(--tx2);font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s;display:block;margin:0 auto}
+.btn-toggle:hover{border-color:var(--ac);color:var(--ac)}
+textarea.resume-ta{width:100%;min-height:180px;background:var(--surf2);border:1.5px solid var(--b);border-radius:10px;padding:16px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6;resize:vertical;outline:none;transition:border-color .2s;margin-top:14px}
+textarea.resume-ta:focus{border-color:var(--ac)}
+textarea.resume-ta::placeholder{color:var(--tx3)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .18s;font-family:'DM Sans',sans-serif}
+.btn-primary{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff}
+.btn-primary:hover{opacity:.88;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;border:1px solid var(--b2);color:var(--tx2)}
+.btn-ghost:hover{border-color:var(--tx2);color:var(--tx)}
+.btn-row{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+
+/* ERROR */
+.err-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px;color:#f87171;font-size:13px;margin-top:12px;display:none}
+
+/* LOADING */
+.loading{text-align:center;padding:48px 24px;display:none}
+.loading.show{display:block}
+.spinner{width:40px;height:40px;border:3px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{font-size:14px;color:var(--tx2)}
+
+/* RESULTS */
+.results{display:none}
+.results.show{display:block}
+.overview{display:grid;grid-template-columns:auto 1fr;gap:24px;background:var(--surf2);border-radius:12px;border:1px solid var(--b);padding:24px;margin-bottom:20px;align-items:center}
+@media(max-width:500px){.overview{grid-template-columns:1fr}}
+.score-circle{width:100px;height:100px;border-radius:50%;border:3px solid var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(79,140,255,.06);flex-shrink:0}
+.sc-num{font-family:'DM Serif Display',serif;font-size:36px;color:var(--ac);line-height:1}
+.sc-max{font-size:12px;color:var(--tx2)}
+.ov-tier{font-size:13px;font-weight:600;padding:4px 12px;border-radius:6px;display:inline-block;margin-bottom:8px}
+.ov-desc{font-size:13px;color:var(--tx2);line-height:1.6}
+
+/* SCORE ITEMS */
+.score-list{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+.si{background:var(--surf2);border-radius:10px;border:1px solid var(--b);padding:16px}
+.si-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.si-title{font-size:14px;font-weight:600}
+.si-right{display:flex;align-items:center;gap:8px}
+.si-score{font-family:'DM Serif Display',serif;font-size:22px}
+.si-grade{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600}
+.si-bar{height:6px;background:var(--b);border-radius:3px;overflow:hidden;margin-bottom:10px}
+.si-fill{height:100%;border-radius:3px}
+.si-checks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.ck{font-size:11px;padding:3px 9px;border-radius:20px}
+.ck-y{background:rgba(16,185,129,.12);color:#34d399;border:1px solid rgba(16,185,129,.2)}
+.ck-n{background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)}
+.ck-p{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.si-action{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.15);border-radius:8px;padding:10px 12px}
+.si-action-title{font-size:11px;font-weight:600;color:#f87171;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.si-action-body{font-size:12px;color:var(--tx2);line-height:1.7}
+.si-action-body b{color:var(--tx)}
+
+/* SENIORS */
+.sec-title{font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.senior-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px}
+.senior-card{background:var(--surf2);border:1px solid var(--b);border-radius:10px;padding:14px}
+.sen-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.sen-result{font-size:12px;color:var(--gr);margin-bottom:8px}
+.sen-chips{display:flex;gap:4px;flex-wrap:wrap}
+.sen-chip{font-size:10px;padding:1px 7px;border-radius:4px;background:var(--surf);color:var(--tx2);border:1px solid var(--b)}
+
+/* COLLEGES */
+.college-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+@media(max-width:600px){.college-grid{grid-template-columns:1fr}}
+.col-tier{border-radius:12px;padding:16px;border:1px solid var(--b)}
+.col-tier.reach{background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.2)}
+.col-tier.target{background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2)}
+.col-tier.safety{background:rgba(16,185,129,.05);border-color:rgba(16,185,129,.2)}
+.ct-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ct-dot{width:8px;height:8px;border-radius:50%}
+.reach .ct-dot{background:var(--rd)} .target .ct-dot{background:var(--am)} .safety .ct-dot{background:var(--gr)}
+.ct-label{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.reach .ct-label{color:#f87171} .target .ct-label{color:#fbbf24} .safety .ct-label{color:#34d399}
+.ct-range{font-size:11px;color:var(--tx3);margin-left:auto}
+.col-list{list-style:none;display:flex;flex-direction:column;gap:6px}
+.col-list li{font-size:12px;padding:8px 10px;border-radius:6px;background:var(--surf);border:1px solid var(--b)}
+.cl-name{font-weight:600;color:var(--tx);margin-bottom:2px}
+.cl-major{color:var(--tx2);font-size:11px}
+.cl-senior{color:var(--tx3);font-size:10px;margin-top:2px}
+.ed-rec{display:inline-flex;align-items:center;gap:8px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:13px}
+.ed-star{color:var(--go);font-size:16px}
+
+footer{padding:28px 0;margin-top:32px;border-top:1px solid var(--b);text-align:center;font-size:12px;color:var(--tx3)}
+.fade{animation:fadeUp .4s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="logo-row">
+    <div class="logo-mark">E</div>
+    <div class="logo-label">Elite Open School</div>
+  </div>
+  <h1>EOS <em>Naviance</em></h1>
+  <p class="subtitle">레쥬메를 분석해 현재 점수와 갭을 파악하고, 선배 합격 데이터 기반으로 3·3·3 대학 리스트를 만들어요.</p>
+</header>
+
+<div class="steps">
+  <div class="step-tab active" id="pill1"><span class="sn">1</span>전공 선택</div>
+  <div class="step-tab" id="pill2"><span class="sn">2</span>레쥬메 업로드</div>
+  <div class="step-tab" id="pill3"><span class="sn">3</span>AI 분석</div>
+  <div class="step-tab" id="pill4"><span class="sn">4</span>결과 확인</div>
+</div>
+
+<!-- STEP 1 -->
+<div class="card show" id="s1">
+  <div class="card-title">전공 방향을 선택하세요</div>
+  <div class="card-sub">심리검사 연동 전까지는 직접 선택해요. Cowork 검사 완성 후 자동 연결 예정.</div>
+  <div class="major-grid">
+    <div class="mj" data-v="Business" onclick="pickMajor(this)">
+      <div class="mj-icon">📊</div><div class="mj-name">Business / Management</div><div class="mj-sub">경영, 마케팅, 경제, Hospitality</div>
+    </div>
+    <div class="mj" data-v="Esports" onclick="pickMajor(this)">
+      <div class="mj-icon">🎮</div><div class="mj-name">Esports / Sports</div><div class="mj-sub">게임 디자인, 스포츠 매니지먼트</div>
+    </div>
+    <div class="mj" data-v="SocialSciences" onclick="pickMajor(this)">
+      <div class="mj-icon">🌐</div><div class="mj-name">Social Sciences</div><div class="mj-sub">사회학, 심리학, 국제학, 공중보건</div>
+    </div>
+    <div class="mj" data-v="Arts" onclick="pickMajor(this)">
+      <div class="mj-icon">🎨</div><div class="mj-name">Arts & Design</div><div class="mj-sub">순수미술, 그래픽, 영상, 일러스트</div>
+    </div>
+    <div class="mj" data-v="DataCS" onclick="pickMajor(this)">
+      <div class="mj-icon">💻</div><div class="mj-name">Data Science / CS</div><div class="mj-sub">컴퓨터과학, 데이터, AI, 알고리즘</div>
+    </div>
+    <div class="mj" data-v="Communication" onclick="pickMajor(this)">
+      <div class="mj-icon">📡</div><div class="mj-name">Communication / Media</div><div class="mj-sub">저널리즘, 미디어, 방송</div>
+    </div>
+    <div class="mj" data-v="Engineering" onclick="pickMajor(this)">
+      <div class="mj-icon">⚙️</div><div class="mj-name">Engineering / Sciences</div><div class="mj-sub">기계공학, 환경과학, 컴퓨터공학</div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="toS2" onclick="goS2()" disabled>다음 단계 →</button>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="card" id="s2">
+  <div class="card-title">레쥬메를 업로드하세요</div>
+  <div class="card-sub">PDF 또는 Word(.docx) 파일을 올려주세요.</div>
+
+  <div class="upload-zone" id="upZone"
+    onclick="document.getElementById('fileIn').click()"
+    ondragover="ev.preventDefault();this.classList.add('over')"
+    ondragleave="this.classList.remove('over')"
+    ondrop="onDrop(event)">
+    <input type="file" id="fileIn" accept=".pdf,.doc,.docx" style="display:none" onchange="onFileChange(this)">
+
+    <div id="upDefault">
+      <div class="up-icon">
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+          <rect width="44" height="44" rx="12" fill="rgba(79,140,255,0.12)"/>
+          <path d="M22 30V16M22 16L17 21M22 16L27 21" stroke="#4f8cff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M13 32h18" stroke="#4f8cff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="up-label">클릭하거나 파일을 드래그하세요</div>
+      <div class="up-hint">PDF · DOCX 지원 · 최대 10MB</div>
+    </div>
+
+    <div id="upPreview" style="display:none">
+      <div class="prev-row">
+        <div class="prev-file-icon">📄</div>
+        <div class="prev-info">
+          <div class="prev-name" id="prevName"></div>
+          <div class="prev-size" id="prevSize"></div>
+        </div>
+        <button class="prev-rm" onclick="rmFile(event)">✕</button>
+      </div>
+      <div class="prev-status" id="prevStatus"></div>
+    </div>
+  </div>
+
+  <div class="or-line"><span>또는</span></div>
+  <button class="btn-toggle" id="pasteBtn" onclick="togglePaste()">텍스트로 직접 입력하기 ↓</button>
+  <div id="pasteWrap" style="display:none">
+    <textarea class="resume-ta" id="resumeTa" placeholder="레쥬메 텍스트를 여기에 붙여넣으세요..."></textarea>
+  </div>
+
+  <div class="err-box" id="errBox"></div>
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="goS1()">← 이전</button>
+    <button class="btn btn-primary" onclick="doAnalyze()">AI 분석 시작 →</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loadMsg">레쥬메를 읽는 중...</div>
+</div>
+
+<!-- RESULTS -->
+<div class="results" id="results"></div>
+
+<footer>Elite Open School · EOS Naviance v1.2 · Powered by Google Gemini (무료)</footer>
+</div>
+
+<!-- LIBRARIES -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  ★ API 키를 여기에 입력하세요 (aistudio.google.com에서 무료 발급)
+const API_KEY = 'AIzaSyCPKyiPDKrpD0vPQHfJ-AhAusC3biyKACI';
+// ═══════════════════════════════════════════════════════
+
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+
+if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── STATE ─────────────────────────────────────────────
+let major = null;
+let fileText = null;
+let pasteOpen = false;
+
+// ── MAJOR LABELS ──────────────────────────────────────
+const MAJOR_LABEL = {
+  Business:'Business / Management', Esports:'Esports / Sports',
+  SocialSciences:'Social Sciences', Arts:'Arts & Design',
+  DataCS:'Data Science / CS', Communication:'Communication / Media',
+  Engineering:'Engineering / Sciences'
+};
+
+// ── EOS SENIOR DB ─────────────────────────────────────
+const SENIOR_DB = {
+  Business:[
+    {name:'Kim Hyun-A',school:'NYU (Hospitality)',score:25,gpa:'4.00',key:'클럽 창설 + 카페 인턴 + 3개국어'},
+    {name:'Kwon Dongwook',school:'Stony Brook (Business Mgmt)',score:22,gpa:'3.97',key:'Valorant 팀 창설 + T1 스폰서'},
+    {name:'Jeon Soobin',school:'UCI (Business Econ)',score:21,gpa:'3.94',key:'VCT Korea 심판 + GEEA 리더'}
+  ],
+  Esports:[
+    {name:'Kim Jihu',school:'Stony Brook (Business Analytics)',score:24,gpa:'3.91',key:'Radiant 277위 + T1A 1위 + 업계 DB'},
+    {name:'Lee Jinwan',school:'NYU (Sports Management)',score:25,gpa:'3.84',key:'세계스태킹 2위 + Riot 인턴 + 논문'},
+    {name:'Mok Minseok',school:'George Mason Korea',score:18,gpa:'3.94',key:'T1A 1위×3 + 창원시장배 1위'}
+  ],
+  SocialSciences:[
+    {name:'Lee Nayae',school:'Johns Hopkins (Sociology)',score:28,gpa:'SAT 1560',key:'국대스키 + 논문출판 + 대사관인턴'},
+    {name:'Lee Reuben',school:'Rutgers (Sociology)',score:20,gpa:'3.85',key:'Key Club 회장 + 대학 연구인턴'},
+    {name:'Ko Seung-woo',school:'Rochester (CogSci $10K)',score:22,gpa:'3.80',key:'AI 논문 2편 출판'}
+  ],
+  Arts:[
+    {name:'Kim Yisak',school:'School of Visual Arts ($26,700)',score:22,gpa:'3.96',key:'포트폴리오 + 미디어 클럽 리더'},
+    {name:'Park Vivian',school:'NYU (Studio Art)',score:24,gpa:'미확인',key:'Fine Arts 포트폴리오 ED'},
+    {name:'Na Sunwoo',school:'USC (Fine Arts)',score:20,gpa:'미확인',key:'코넬 ED 도전 후 USC 합격'}
+  ],
+  DataCS:[
+    {name:'Park Eugene',school:'UIUC (Data Science)',score:26,gpa:'3.95',key:'AI 인턴 + 학생회장 + 수학클럽창설'},
+    {name:'Kim Jeongwook',school:'UIUC (Data Science)',score:25,gpa:'3.70',key:'USACO Gold + 데이터인턴'},
+    {name:'Nam Juhyeon',school:'UCSD (AI)',score:26,gpa:'3.95/W4.40',key:'AP만점4개 + 논문 + AI기기개발'}
+  ],
+  Communication:[
+    {name:'Hu Yun',school:'UNC (Media)',score:22,gpa:'3.98',key:'KIST 인턴 + MBC 방송수상'},
+    {name:'Yoon Subeen',school:'UCSB (Communication)',score:20,gpa:'3.96',key:'IT 클럽 4개 + 국회 기자'},
+    {name:'Choi Eunryul',school:'Vanderbilt (Comm. Science)',score:28,gpa:'3.96',key:'Carnegie Hall + 국대조정 + K-BioX'}
+  ],
+  Engineering:[
+    {name:'Seo Andrew',school:'UC Berkeley (Env. Design)',score:23,gpa:'3.84/W4.53',key:'KIST 인턴 + AI 데이터 분석'},
+    {name:'Chun Jordan',school:'Gonzaga (Engineering)',score:19,gpa:'3.85',key:'3D모델링인턴 + Arduino개발'},
+    {name:'Nam Juhyeon',school:'UCSD (AI)',score:26,gpa:'3.95',key:'AP만점4개 + AI기기개발 + 논문'}
+  ]
+};
+
+// ── COLLEGE DB ────────────────────────────────────────
+const COL_DB = {
+  Business:{
+    reach:[{n:'New York University',m:'Hospitality / Business',s:'Kim Hyun-A — NYU (2026)'},{n:'University of Michigan',m:'Ross School of Business',s:'2026 코호트 도전'},{n:'Emory University',m:'Business / Management',s:'2026 코호트 도전'}],
+    target:[{n:'UIUC',m:'Business (Undeclared)',s:'2026 코호트 합격'},{n:'Ohio State University',m:'Economics-Business',s:'Jeon Soobin (2024)'},{n:'UCI',m:'Business Economics',s:'Jeon Soobin, Kim Hyundo (2024)'}],
+    safety:[{n:'Rutgers University',m:'Business Management',s:'다수 합격 확인'},{n:'Stony Brook University',m:'Business Management',s:'Kwon Dongwook 합격'},{n:'Indiana University',m:'Business Exploratory',s:'2024 코호트 합격'}]
+  },
+  Esports:{
+    reach:[{n:'New York University',m:'Sports Management',s:'Lee Jinwan — NYU ED (2026)'},{n:'Stony Brook University',m:'Business Analytics',s:'Kim Jihu (2025)'},{n:'Ohio State University',m:'Sports Industry',s:'2024/2025 코호트 합격'}],
+    target:[{n:'Saint Louis University',m:'Sports Business',s:'다수 합격 + 장학금'},{n:'Illinois State University',m:'Game Design',s:'다수 합격 확인'},{n:'University of Utah (Asia)',m:'Games BS',s:'2023/2024 코호트 합격'}],
+    safety:[{n:'Oregon State (INTO)',m:'Business Administration',s:'다수 합격 확인'},{n:'Drew University (INTO)',m:'Business',s:'다수 합격 확인'},{n:'George Mason Korea',m:'Business Analytics',s:'Mok Minseok 합격'}]
+  },
+  SocialSciences:{
+    reach:[{n:'Johns Hopkins University',m:'Sociology',s:'Lee Nayae — JHU ED (2026)'},{n:'University of Michigan',m:'Sociology',s:'2026 코호트 합격'},{n:'Emory University',m:'Sociology',s:'2026 코호트 도전'}],
+    target:[{n:'UNC Chapel Hill',m:'Sociology / Global Studies',s:'Hu Yun 합격 (2024)'},{n:'University of Rochester',m:'Cognitive Science',s:'Ko Seung-woo 합격 $10K'},{n:'Case Western Reserve',m:'Sociology',s:'2025/2026 코호트 합격'}],
+    safety:[{n:'Rutgers University',m:'Sociology',s:'다수 합격 확인'},{n:'UCI',m:'Sociology',s:'다수 합격 확인'},{n:'UC Davis',m:'Sociology',s:'다수 합격 확인'}]
+  },
+  Arts:{
+    reach:[{n:'New York University',m:'Studio Art / Integrated Design',s:'Park Vivian — NYU ED (2025)'},{n:'USC',m:'Fine Arts',s:'Na Sunwoo 합격 (2025)'},{n:'UIUC',m:'Graphic Design',s:'2025 코호트 도전'}],
+    target:[{n:'School of Visual Arts',m:'BFA Design',s:'Kim Yisak $26,700 장학금'},{n:'Rochester Institute of Technology',m:'Graphic Design',s:'Kim Yisak 합격'},{n:'The New School',m:'Illustration / Communication Design',s:'다수 합격'}],
+    safety:[{n:'Purdue University',m:'Integrated Studio Arts',s:'2025 합격'},{n:'UC Davis',m:'Fine Arts',s:'2025 합격'},{n:'George Washington University',m:'Fine Arts',s:'다수 합격'}]
+  },
+  DataCS:{
+    reach:[{n:'UIUC',m:'Information Sciences + Data Science',s:'Park Eugene, Kim Jeongwook 합격'},{n:'UC San Diego',m:'Artificial Intelligence',s:'Nam Juhyeon 합격 (2025)'},{n:'UC Berkeley',m:'Data Science / CS',s:'Seo Andrew 합격 (2025)'}],
+    target:[{n:'UW-Madison',m:'Data Science / CS',s:'Kim Hyunmin 합격 (2026)'},{n:'Purdue University',m:'Data Analytics',s:'다수 합격'},{n:'Ohio State University',m:'Data Analytics',s:'Kim Jeongwook 합격'}],
+    safety:[{n:'Rutgers University',m:'Data Science',s:'다수 합격'},{n:'UCI',m:'Data Science',s:'다수 합격'},{n:'Stony Brook University',m:'Computer Science',s:'다수 합격'}]
+  },
+  Communication:{
+    reach:[{n:'Vanderbilt University',m:'Communication of Science & Technology',s:'Choi Eunryul — Vanderbilt ED (2026)'},{n:'NYU',m:'Media, Culture & Communication',s:'Hu Yun 합격 (2024)'},{n:'USC',m:'Communication',s:'2024 코호트 도전'}],
+    target:[{n:'UNC Chapel Hill',m:'Media Studies',s:'Hu Yun 합격 (2024)'},{n:'UC Santa Barbara',m:'Communication',s:'Yoon Subeen 합격'},{n:'University of Colorado Boulder',m:'Communication',s:'Yoon Subeen 합격'}],
+    safety:[{n:'Oregon State University',m:'Marketing / Communication',s:'다수 합격'},{n:'Colorado State University',m:'Communication Studies',s:'Yoon Subeen 합격'},{n:'University of Connecticut',m:'Communication',s:'다수 합격'}]
+  },
+  Engineering:{
+    reach:[{n:'UC Berkeley',m:'Engineering / Data Science',s:'Seo Andrew 합격 (2025)'},{n:'UCSD',m:'Computer Science / Engineering',s:'2025 코호트 합격'},{n:'University of Michigan',m:'Engineering',s:'2024 코호트 도전'}],
+    target:[{n:'Purdue University',m:'Engineering',s:'다수 합격'},{n:'Penn State University',m:'Mechanical Engineering',s:'Na Yunseong 합격 (2024)'},{n:'UC Davis',m:'Engineering',s:'2024 합격'}],
+    safety:[{n:'Rutgers University',m:'Engineering (Undeclared)',s:'다수 합격'},{n:'UCI',m:'Engineering (Undeclared)',s:'Na Yunseong 합격'},{n:'Cal Poly Pomona',m:'Mechanical / Computer Engineering',s:'다수 합격'}]
+  }
+};
+
+// ── UI HELPERS ────────────────────────────────────────
+function setPills(n){
+  [1,2,3,4].forEach(i=>{
+    const p=document.getElementById('pill'+i);
+    p.classList.toggle('active',i===n);
+    p.classList.toggle('done',i<n);
+  });
+}
+function showErr(msg){
+  const e=document.getElementById('errBox');
+  e.textContent=msg; e.style.display='block';
+}
+function hideErr(){document.getElementById('errBox').style.display='none';}
+
+// ── STEP NAV ──────────────────────────────────────────
+function pickMajor(el){
+  document.querySelectorAll('.mj').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  major=el.dataset.v;
+  document.getElementById('toS2').disabled=false;
+}
+function goS2(){
+  if(!major)return;
+  document.getElementById('s1').classList.remove('show');
+  document.getElementById('s2').classList.add('show');
+  setPills(2);
+}
+function goS1(){
+  document.getElementById('s2').classList.remove('show');
+  document.getElementById('s1').classList.add('show');
+  setPills(1);
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('upZone').classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f) loadFile(f);
+}
+function onFileChange(inp){
+  if(inp.files[0]) loadFile(inp.files[0]);
+}
+async function loadFile(f){
+  if(f.size>10*1024*1024){showErr('파일이 10MB를 초과해요.');return;}
+  const nm=f.name.toLowerCase();
+  if(!nm.endsWith('.pdf')&&!nm.endsWith('.doc')&&!nm.endsWith('.docx')){showErr('PDF 또는 DOCX 파일만 가능해요.');return;}
+  document.getElementById('upDefault').style.display='none';
+  document.getElementById('upPreview').style.display='block';
+  document.getElementById('prevName').textContent=f.name;
+  document.getElementById('prevSize').textContent=fmtSize(f.size);
+  document.getElementById('prevStatus').textContent='파일 읽는 중...';
+  document.getElementById('upZone').classList.add('done');
+  try{
+    fileText = nm.endsWith('.pdf') ? await readPDF(f) : await readDOCX(f);
+    const preview=fileText.substring(0,60).replace(/\n/g,' ');
+    document.getElementById('prevStatus').textContent='✓ 읽기 완료 — '+preview+'...';
+    hideErr();
+  }catch(e){
+    document.getElementById('prevStatus').style.color='#f87171';
+    document.getElementById('prevStatus').textContent='읽기 실패 — 텍스트 입력을 이용해주세요.';
+    fileText=null;
+  }
+}
+function rmFile(e){
+  e.stopPropagation();
+  fileText=null;
+  document.getElementById('fileIn').value='';
+  document.getElementById('upDefault').style.display='block';
+  document.getElementById('upPreview').style.display='none';
+  document.getElementById('upZone').classList.remove('done');
+}
+function togglePaste(){
+  pasteOpen=!pasteOpen;
+  document.getElementById('pasteWrap').style.display=pasteOpen?'block':'none';
+  document.getElementById('pasteBtn').textContent=pasteOpen?'텍스트 입력 닫기 ↑':'텍스트로 직접 입력하기 ↓';
+}
+async function readPDF(f){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=async e=>{
+      try{
+        const pdf=await window.pdfjsLib.getDocument({data:new Uint8Array(e.target.result)}).promise;
+        let t='';
+        for(let i=1;i<=pdf.numPages;i++){
+          const pg=await pdf.getPage(i);
+          const ct=await pg.getTextContent();
+          t+=ct.items.map(x=>x.str).join(' ')+'\n';
+        }
+        res(t.trim());
+      }catch(err){rej(err);}
+    };
+    r.onerror=rej; r.readAsArrayBuffer(f);
+  });
+}
+async function readDOCX(f){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=async e=>{
+      try{const result=await window.mammoth.extractRawText({arrayBuffer:e.target.result});res(result.value.trim());}
+      catch(err){rej(err);}
+    };
+    r.onerror=rej; r.readAsArrayBuffer(f);
+  });
+}
+function fmtSize(b){
+  if(b<1024)return b+' B';
+  if(b<1024*1024)return (b/1024).toFixed(1)+' KB';
+  return (b/(1024*1024)).toFixed(1)+' MB';
+}
+
+// ── ANALYZE ───────────────────────────────────────────
+async function doAnalyze(){
+  let txt=fileText||'';
+  if(!txt){const ta=document.getElementById('resumeTa');if(ta)txt=ta.value.trim();}
+  if(!txt||txt.length<50){showErr('레쥬메 파일을 업로드하거나 텍스트를 입력해주세요.');return;}
+
+  const key = API_KEY || localStorage.getItem('eos_key') || '';
+  if(!key){showErr('API 키가 없어요. index.html 파일 상단 API_KEY 변수에 Gemini 키를 입력해주세요.');return;}
+
+  hideErr();
+  document.getElementById('s2').classList.remove('show');
+  const loading=document.getElementById('loading');
+  loading.classList.add('show');
+  setPills(3);
+
+  const msgs=['레쥬메를 읽는 중...','Academics 채점 중...','Extracurriculars 분석 중...','Athletic 항목 확인 중...','Personal 프로젝트 평가 중...','EOS 선배 데이터 매칭 중...','3·3·3 대학 리스트 생성 중...'];
+  let mi=0;
+  const msgEl=document.getElementById('loadMsg');
+  const timer=setInterval(()=>{mi=(mi+1)%msgs.length;msgEl.textContent=msgs[mi];},1400);
+
+  try{
+    const prompt=buildPrompt(txt,major);
+    const res=await fetch(`${GEMINI_URL}?key=${key}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:0.2,maxOutputTokens:2000}
+      })
+    });
+    if(!res.ok){
+      const ed=await res.json().catch(()=>({}));
+      throw new Error(ed?.error?.message||'HTTP '+res.status);
+    }
+    const data=await res.json();
+    const raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const clean=raw.replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(clean);
+    clearInterval(timer);
+    loading.classList.remove('show');
+    renderResults(parsed);
+  }catch(err){
+    clearInterval(timer);
+    loading.classList.remove('show');
+    document.getElementById('s2').classList.add('show');
+    setPills(2);
+    const m=err.message||'';
+    if(m.includes('API_KEY')||m.includes('key')||m.includes('401'))
+      showErr('API 키가 올바르지 않아요. aistudio.google.com에서 발급한 키인지 확인해주세요.');
+    else if(m.includes('429'))
+      showErr('요청 한도 초과. 잠시 후 다시 시도해주세요.');
+    else
+      showErr('오류: '+m);
+    console.error('EOS error:',err);
+  }
+}
+
+// ── PROMPT ────────────────────────────────────────────
+function buildPrompt(resume,mv){
+  return `당신은 미국 대학 입시 전문가입니다. 아래 레쥬메를 분석해 JSON만 반환하세요. 다른 텍스트 없이 JSON만.
+
+전공 카테고리: ${MAJOR_LABEL[mv]}
+
+레쥬메:
+${resume}
+
+반환 형식:
+{
+  "studentName": "학생 이름 (없으면 학생)",
+  "scores": {
+    "academics": {
+      "score": 1~6,
+      "checks": [
+        {"label":"GPA 3.8 이상","status":"yes/no/partial","detail":"실제값"},
+        {"label":"AP 과목 3개 이상","status":"yes/no/partial","detail":""},
+        {"label":"SAT/ACT 제출","status":"yes/no/partial","detail":""},
+        {"label":"대학 수업 이수","status":"yes/no/partial","detail":""},
+        {"label":"수학/과학 심화 과목","status":"yes/no/partial","detail":""}
+      ],
+      "actions": ["보완방법1","보완방법2","보완방법3"]
+    },
+    "ec": {
+      "score": 1~6,
+      "checks": [
+        {"label":"클럽 참여 3개 이상","status":"yes/no/partial","detail":""},
+        {"label":"VP 이상 리더십","status":"yes/no/partial","detail":""},
+        {"label":"클럽/조직 창설 경험","status":"yes/no/partial","detail":""},
+        {"label":"전공 연결 활동","status":"yes/no/partial","detail":""},
+        {"label":"3년 이상 지속 활동","status":"yes/no/partial","detail":""}
+      ],
+      "actions": ["보완방법1","보완방법2","보완방법3"]
+    },
+    "athletic": {
+      "score": 1~6,
+      "checks": [
+        {"label":"운동/Esports 팀 소속","status":"yes/no/partial","detail":""},
+        {"label":"대회 출전 경력","status":"yes/no/partial","detail":""},
+        {"label":"팀 캡틴/리더 역할","status":"yes/no/partial","detail":""},
+        {"label":"지역/전국 수상","status":"yes/no/partial","detail":""},
+        {"label":"국제 대회/국가대표","status":"yes/no/partial","detail":""}
+      ],
+      "actions": ["보완방법1","보완방법2"]
+    },
+    "personal": {
+      "score": 1~6,
+      "checks": [
+        {"label":"인턴십 경험","status":"yes/no/partial","detail":""},
+        {"label":"개인 프로젝트 결과물","status":"yes/no/partial","detail":""},
+        {"label":"논문/연구 출판","status":"yes/no/partial","detail":""},
+        {"label":"수상/공모전","status":"yes/no/partial","detail":""},
+        {"label":"전공 관련 자격증","status":"yes/no/partial","detail":""}
+      ],
+      "actions": ["보완방법1","보완방법2","보완방법3"]
+    },
+    "rec": {
+      "score": 1~6,
+      "checks": [
+        {"label":"교사 수상 내역","status":"yes/no/partial","detail":""},
+        {"label":"학교 리더십 역할","status":"yes/no/partial","detail":""},
+        {"label":"TA/멘토링 경험","status":"yes/no/partial","detail":""},
+        {"label":"학교 어워드 다수","status":"yes/no/partial","detail":""}
+      ],
+      "actions": ["추천서 강화방법1","추천서 강화방법2"]
+    }
+  },
+  "overallInsight": "핵심 인사이트 2~3문장. 강점과 약점 중심."
+}
+
+채점 기준 (${MAJOR_LABEL[mv]} 전공 기준):
+6=세계/전국 수준 성취·논문·업계인턴 / 5=지역수상·VP이상·관련인턴 / 4=꾸준한활동·교내리더십 / 3=평균참여·멤버위주 / 2=활동부족·전공연결없음 / 1=데이터없음
+
+JSON만 반환하세요.`;
+}
+
+// ── RENDER ────────────────────────────────────────────
+const GRADE={6:'Exceptional',5:'Strong',4:'Solid',3:'Neutral',2:'Negative',1:'Unread'};
+const GCOLOR={6:'#10b981',5:'#3b82f6',4:'#8b5cf6',3:'#f59e0b',2:'#ef4444',1:'#6b7280'};
+const ILABEL={academics:'Academics',ec:'Extracurriculars',athletic:'Athletic',personal:'Personal / Projects',rec:'Counselor Rec.'};
+
+function renderResults(d){
+  setPills(4);
+  const sc=d.scores;
+  const total=sc.academics.score+sc.ec.score+sc.athletic.score+sc.personal.score+sc.rec.score;
+  let tier,tc,tb,edNote;
+  if(total>=28){tier='Top 20 Reach';tc='#ef4444';tb='rgba(239,68,68,.08)';edNote='ED 전략 필수';}
+  else if(total>=24){tier='Top 50 Reach';tc='#f97316';tb='rgba(249,115,22,.08)';edNote='ED 전략 권장';}
+  else if(total>=18){tier='Target 구간';tc='#f59e0b';tb='rgba(245,158,11,.08)';edNote='EA 전략 추천';}
+  else if(total>=12){tier='Safety 구간';tc='#10b981';tb='rgba(16,185,129,.08)';edNote='파트너 학교 + 장학금';}
+  else{tier='전략 재설계 필요';tc='#6b7280';tb='rgba(107,114,128,.08)';edNote='장기 계획 권장';}
+
+  const seniors=SENIOR_DB[major]||[];
+  const cols=COL_DB[major]||{reach:[],target:[],safety:[]};
+
+  let h=`<div class="fade">`;
+
+  // Overview
+  h+=`<div class="overview">
+    <div class="score-circle"><div class="sc-num">${total}</div><div class="sc-max">/ 30</div></div>
+    <div>
+      <div class="ov-tier" style="background:${tb};color:${tc};border:1px solid ${tc}33">${tier}</div>
+      <div class="ov-desc"><strong style="color:var(--tx)">${d.studentName}</strong> · ${MAJOR_LABEL[major]}<br>${d.overallInsight}</div>
+    </div>
+  </div>`;
+
+  // Score items
+  h+=`<div class="score-list">`;
+  ['academics','ec','athletic','personal','rec'].forEach(k=>{
+    const it=sc[k]; const s=it.score; const c=GCOLOR[s]; const pct=(s/6)*100;
+    h+=`<div class="si fade">
+      <div class="si-head">
+        <div class="si-title">${ILABEL[k]}</div>
+        <div class="si-right">
+          <div class="si-score" style="color:${c}">${s}</div>
+          <div class="si-grade" style="background:${c}18;color:${c};border:1px solid ${c}33">${GRADE[s]}</div>
+        </div>
+      </div>
+      <div class="si-bar"><div class="si-fill" style="width:${pct}%;background:${c}"></div></div>
+      <div class="si-checks">`;
+    (it.checks||[]).forEach(ck=>{
+      const cls=ck.status==='yes'?'ck-y':ck.status==='no'?'ck-n':'ck-p';
+      const ic=ck.status==='yes'?'✓':ck.status==='no'?'✗':'△';
+      h+=`<span class="ck ${cls}">${ic} ${ck.label}${ck.detail?': '+ck.detail:''}</span>`;
+    });
+    h+=`</div>`;
+    if(s<=3&&it.actions?.length){
+      h+=`<div class="si-action"><div class="si-action-title">→ ${s}점 → ${Math.min(s+2,6)}점으로 올리려면</div><div class="si-action-body">`;
+      it.actions.forEach((a,i)=>h+=`<b>${i+1}순위:</b> ${a}<br>`);
+      h+=`</div></div>`;
+    }
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+
+  // Seniors
+  h+=`<div class="sec-title"><span style="font-size:18px">👥</span> 비슷한 선배 합격 사례</div>
+  <div class="senior-grid">`;
+  seniors.forEach(sr=>{
+    h+=`<div class="senior-card">
+      <div class="sen-name">${sr.name}</div>
+      <div class="sen-result">→ ${sr.school}</div>
+      <div class="sen-chips">
+        <span class="sen-chip">GPA ${sr.gpa}</span>
+        <span class="sen-chip">총점 ${sr.score}/30</span>
+      </div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:6px">${sr.key}</div>
+    </div>`;
+  });
+  h+=`</div>`;
+
+  // ED rec
+  if(cols.reach[0]&&total>=18)
+    h+=`<div class="ed-rec"><span class="ed-star">★</span><span>ED 추천: <strong style="color:var(--go)">${cols.reach[0].n}</strong> — ${cols.reach[0].m} · ${edNote}</span></div>`;
+
+  // Colleges
+  h+=`<div class="college-grid">`;
+  [{key:'reach',label:'Reach',range:'총점 24+'},{key:'target',label:'Target',range:'총점 18–23'},{key:'safety',label:'Safety',range:'총점 12–17'}].forEach(({key,label,range})=>{
+    h+=`<div class="col-tier ${key}"><div class="ct-head"><div class="ct-dot"></div><div class="ct-label">${label}</div><div class="ct-range">${range}</div></div><ul class="col-list">`;
+    (cols[key]||[]).forEach(c=>{
+      h+=`<li><div class="cl-name">${c.n}</div><div class="cl-major">${c.m}</div><div class="cl-senior">${c.s}</div></li>`;
+    });
+    h+=`</ul></div>`;
+  });
+  h+=`</div>`;
+
+  h+=`<div class="btn-row" style="justify-content:center;margin-top:8px">
+    <button class="btn btn-ghost" onclick="restart()">← 다시 분석하기</button>
+  </div></div>`;
+
+  const el=document.getElementById('results');
+  el.innerHTML=h; el.classList.add('show');
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── RESTART ───────────────────────────────────────────
+function restart(){
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('results').innerHTML='';
+  fileText=null; pasteOpen=false; major=null;
+  document.getElementById('fileIn').value='';
+  document.getElementById('upDefault').style.display='block';
+  document.getElementById('upPreview').style.display='none';
+  document.getElementById('upZone').classList.remove('done');
+  document.getElementById('pasteWrap').style.display='none';
+  document.getElementById('pasteBtn').textContent='텍스트로 직접 입력하기 ↓';
+  document.querySelectorAll('.mj').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('toS2').disabled=true;
+  document.getElementById('s2').classList.remove('show');
+  document.getElementById('s1').classList.add('show');
+  setPills(1);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
