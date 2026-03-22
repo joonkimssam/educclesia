@@ -510,6 +510,9 @@ let selectedMajor = null;
 let uploadedFileText = null;
 let pasteVisible = false;
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
+// ── API 키: GitHub에 올리기 전에 여기에 입력하세요 ──────────────
+const HARDCODED_API_KEY = '';  // 예: 'sk-ant-api03-xxxx...'
+// ─────────────────────────────────────────────────────────────────
 
 // ── FILE UPLOAD HANDLERS ──────────────────────────────────────────
 function onDragOver(e) {
@@ -860,13 +863,16 @@ async function analyzeResume() {
   }, 1400);
 
   try {
-    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    // 우선순위: 하드코딩 → localStorage → 입력창
+    const apiKey = HARDCODED_API_KEY ||
+                   localStorage.getItem('eos_api_key') ||
+                   document.getElementById('apiKeyInput').value.trim();
     if (!apiKey) {
       clearInterval(interval);
       loading.classList.remove('active');
       document.getElementById('step2').classList.add('active');
       setPill(2);
-      showError('Anthropic API 키를 입력해주세요. 위 설정 아이콘을 눌러 입력할 수 있어요.');
+      showError('API 키가 없어요. 우하단 ⚙ 버튼을 눌러 키를 입력해주세요.');
       document.getElementById('apiKeySection').style.display = 'block';
       return;
     }
@@ -1180,10 +1186,15 @@ function toggleApiSection() {
 
 // Load saved key on startup
 (function initApiKey() {
+  if (HARDCODED_API_KEY) {
+    // 키가 코드에 있으면 UI 완전히 숨김
+    document.getElementById('apiKeySection').style.display = 'none';
+    document.querySelector('.settings-toggle').style.display = 'none';
+    return;
+  }
   const saved = localStorage.getItem('eos_api_key');
   if (saved) {
     document.getElementById('apiKeyInput').value = saved;
-    // hide section if key already saved
     document.getElementById('apiKeySection').style.display = 'none';
   }
 })();
